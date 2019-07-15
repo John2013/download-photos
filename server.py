@@ -3,17 +3,21 @@ import os
 
 from aiohttp import web
 import aiofiles
+from aiohttp.web_exceptions import HTTPNotFound
 
 INTERVAL_SECS = 1
 
 
 async def archivate(request):
     archive_hash = request.match_info['archive_hash']
-    os.chdir(f"test_photos/{archive_hash}")
+    dir_path = f"test_photos/{archive_hash}"
+    if not os.path.isdir(dir_path):
+        raise HTTPNotFound(reason='Архив не существует или был удален')
+    os.path.isdir(dir_path)
+    os.chdir(dir_path)
 
     response = web.StreamResponse()
     response.headers['Content-Disposition'] = 'attachment; filename="photos.zip"'
-    print(response)
     await response.prepare(request)
 
     args = f'zip -R - * -0'
