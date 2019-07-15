@@ -20,7 +20,7 @@ async def archivate(request):
     response.headers['Content-Disposition'] = 'attachment; filename="photos.zip"'
     await response.prepare(request)
 
-    args = f'zip -R - * -0'
+    args = b'zip -R - * -0'
     process_coro = await asyncio.create_subprocess_shell(
         args,
         stdin=None,
