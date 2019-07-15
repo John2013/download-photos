@@ -1,5 +1,5 @@
 import asyncio
-import datetime
+import os
 
 from aiohttp import web
 import aiofiles
@@ -8,23 +8,25 @@ INTERVAL_SECS = 1
 
 
 async def archivate(request):
+    archive_hash = request.match_info['archive_hash']
+    os.chdir(f"test_photos/{archive_hash}")
+
     response = web.StreamResponse()
-
-    # Большинство браузеров не отрисовывают частично загруженный контент, только если это не HTML.
-    # Поэтому отправляем клиенту именно HTML, указываем это в Content-Type.
-    response.headers['Content-Type'] = 'text/html'
-
-    # Отправляет клиенту HTTP заголовки
+    response.headers['Content-Disposition'] = 'attachment; filename="photos.zip"'
+    print(response)
     await response.prepare(request)
 
-    while True:
-        formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        message = f'{formatted_date}<br>'
+    args = f'zip - . -0'
+    process_coro = await asyncio.create_subprocess_shell(
+        args,
+        stdin=None,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    while not process_coro.stdout.at_eof():
+        await response.write(await process_coro.stdout.read())
 
-        # Отправляет клиенту очередную порцию ответа
-        await response.write(message.encode('utf-8'))
-
-        await asyncio.sleep(INTERVAL_SECS)
+    os.chdir('../..')
 
 
 async def handle_index_page(request):
