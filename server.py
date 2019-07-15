@@ -16,7 +16,7 @@ async def archivate(request):
     print(response)
     await response.prepare(request)
 
-    args = f'zip - . -0'
+    args = f'zip -R - * -0'
     process_coro = await asyncio.create_subprocess_shell(
         args,
         stdin=None,
@@ -27,6 +27,7 @@ async def archivate(request):
         await response.write(await process_coro.stdout.read())
 
     os.chdir('../..')
+    return response
 
 
 async def handle_index_page(request):
