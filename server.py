@@ -36,7 +36,7 @@ async def archivate(request):
             logging.info('Sending archive chunk...')
             await response.write(await process_coro.stdout.read(data_limit))
     except asyncio.CancelledError:
-        logging.error('Sending aborted')
+        logging.error('Download was interrupted')
         successful = False
         process_coro.kill()
         raise
@@ -45,7 +45,6 @@ async def archivate(request):
         if successful:
             logging.info('Sending complete')
             return response
-
 
 
 async def handle_index_page(request):
