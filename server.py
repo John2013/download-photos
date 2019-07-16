@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 from aiohttp import web
@@ -27,9 +28,12 @@ async def archivate(request):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
+    logging.info('Start sending...')
     while not process_coro.stdout.at_eof():
+        logging.info('Sending archive chunk...')
         await response.write(await process_coro.stdout.read())
 
+    logging.info('Sending is complete')
     os.chdir('../..')
     return response
 
@@ -41,6 +45,10 @@ async def handle_index_page(request):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+        level=logging.DEBUG)
+
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
