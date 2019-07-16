@@ -38,6 +38,7 @@ async def archivate(request):
     except asyncio.CancelledError:
         logging.error('Sending aborted')
         successful = False
+        process_coro.kill()
         raise
     finally:
         os.chdir('../..')
