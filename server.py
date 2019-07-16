@@ -28,15 +28,23 @@ async def archivate(request):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
-    data_limit = 2 ** 16  # KiB
+    data_limit = 2 ** 16  # 64 KiB
+    successful = True
     logging.info('Start sending...')
-    while not process_coro.stdout.at_eof():
-        logging.info('Sending archive chunk...')
-        await response.write(await process_coro.stdout.read(data_limit))
+    try:
+        while not process_coro.stdout.at_eof():
+            logging.info('Sending archive chunk...')
+            await response.write(await process_coro.stdout.read(data_limit))
+    except asyncio.CancelledError:
+        logging.error('Sending aborted')
+        successful = False
+        raise
+    finally:
+        os.chdir('../..')
+        if successful:
+            logging.info('Sending complete')
+            return response
 
-    logging.info('Sending is complete')
-    os.chdir('../..')
-    return response
 
 
 async def handle_index_page(request):
