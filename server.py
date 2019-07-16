@@ -28,10 +28,11 @@ async def archivate(request):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
+    data_limit = 2 ** 16  # KiB
     logging.info('Start sending...')
     while not process_coro.stdout.at_eof():
         logging.info('Sending archive chunk...')
-        await response.write(await process_coro.stdout.read())
+        await response.write(await process_coro.stdout.read(data_limit))
 
     logging.info('Sending is complete')
     os.chdir('../..')
